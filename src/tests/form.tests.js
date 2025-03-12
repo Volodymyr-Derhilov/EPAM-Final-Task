@@ -2,60 +2,72 @@ const LoginPage = require("./../po/pages/login.page");
 
 const loginPage = new LoginPage();
 
+const testData = [
+  {
+    testCase: "Test Login form without data",
+    username: "",
+    password: "",
+    fieldsToClear: [], // if the fields don't need to be cleared
+    expectedError: /Username is required/,
+    expectedTitle: null,
+  },
+  {
+    testCase: "UC-1: Test Login form with empty credentials",
+    username: "John_Smith",
+    password: "secret_sauce",
+    fieldsToClear: ["userName", "password"], // if the fields need to be cleared
+    expectedError: /Username is required/,
+    expectedTitle: null,
+  },
+  {
+    testCase: "UC-2: Test Login form with credentials by passing Username",
+    username: "Max",
+    password: "secret_sauce",
+    fieldsToClear: ["password"], // if the fields need to be cleared
+    expectedError: /Password is required/,
+    expectedTitle: null,
+  },
+  {
+    testCase:
+      "UC-3: Test Login form with credentials by passing Username & Password",
+    username: "problem_user",
+    password: "secret_sauce",
+    fieldsToClear: [], // if the fields don't need to be cleared
+    expectedError: null,
+    expectedTitle: "Swag Labs",
+  },
+];
+
 describe("Swag Labs login page", () => {
   beforeEach(async () => {
     await loginPage.open();
   });
 
-  it("should Test Login form without data", async () => {
-    await loginPage.loginForm.setData("", "");
+  testData.forEach((test) => {
+    it(`${test.testCase}`, async () => {
+      console.log(`Starting ${test.testCase}`);
 
-    await loginPage.loginForm.loginBtn.click();
+      await loginPage.loginForm.setData(test.username, test.password);
 
-    await expect(loginPage.loginForm.errorMessage).toBeDisplayed();
+      if (test.fieldsToClear && test.fieldsToClear.length) {
+        for (const field of test.fieldsToClear) {
+          await loginPage.loginForm[field].click();
+          await loginPage.loginForm[field].clearValue();
+        }
 
-    await expect(loginPage.loginForm.errorMessage).toHaveText(
-      /Username is required/
-    );
-  });
+        await loginPage.loginForm.loginBtn.click();
 
-  it("should Test Login form with empty credentials", async () => {
-    await loginPage.loginForm.setData("John_Smith", "secret_sauce");
+        if (test.expectedError) {
+          await expect(loginPage.loginForm.errorMessage).toBeDisplayed();
+          await expect(loginPage.loginForm.errorMessage).toHaveText(
+            test.expectedError
+          );
+        } else if (test.expectedTitle) {
+          await expect(browser).toHaveTitle(test.expectedTitle);
+        }
 
-    await loginPage.loginForm.userName.click();
-    await loginPage.loginForm.userName.clearValue();
-    await loginPage.loginForm.password.click();
-    await loginPage.loginForm.password.clearValue();
-
-    await loginPage.loginForm.loginBtn.click();
-
-    await expect(loginPage.loginForm.errorMessage).toBeDisplayed();
-
-    await expect(loginPage.loginForm.errorMessage).toHaveText(
-      /Username is required/
-    );
-  });
-
-  it("should Test Login form with credentials by passing Username", async () => {
-    await loginPage.loginForm.setData("Max", "secret_sauce");
-
-    await loginPage.loginForm.password.click();
-    await loginPage.loginForm.password.clearValue();
-
-    await browser.pause(3000);
-
-    await loginPage.loginForm.loginBtn.click();
-
-    await expect(loginPage.loginForm.errorMessage).toBeDisplayed();
-
-    await expect(loginPage.loginForm.errorMessage).toHaveText(
-      /Password is required/
-    );
-  });
-
-  it("should Test Login form with credentials by passing Username & Password", async () => {
-    await loginPage.loginForm.setData("problem_user", "secret_sauce");
-    await loginPage.loginForm.loginBtn.click();
-    await expect(browser).toHaveTitle("Swag Labs");
+        console.log(`Finished ${test.testCase}`);
+      }
+    });
   });
 });
