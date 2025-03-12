@@ -1,6 +1,6 @@
 {
   "name": "EPAM-Final-Task",
-  "type": "module",
+  "type": "commonjs",
   "scripts": {
     "test": "wdio run src/config/wdio.conf.js"
   },
